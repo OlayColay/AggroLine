@@ -1,0 +1,210 @@
+fileFormatVersion: 2
+guid: 8975fc88995f2d1438dd5a19530f88d9
+ModelImporter:
+  serializedVersion: 20200
+  internalIDToNameTable:
+  - first:
+      74: 3777991111819338597
+    second: rig_Yoyo|000
+  - first:
+      74: -2420032214795544656
+    second: rig_Yoyo|001
+  - first:
+      74: -2175191350470878458
+    second: rig_Yoyo|002
+  - first:
+      74: 6692605075590601207
+    second: rig_Yoyo|003
+  - first:
+      74: 5429329541042680866
+    second: rig_Yoyo|004
+  - first:
+      74: -1309289516854183678
+    second: rig_Yoyo|005
+  - first:
+      74: -1868547830832165789
+    second: rig_Yoyo|006
+  - first:
+      74: 8827290514030538289
+    second: rig_Yoyo|007
+  - first:
+      74: 2848368381600050037
+    second: rig_Yoyo|008
+  - first:
+      74: -8889392120718023121
+    second: rig_Yoyo|009
+  - first:
+      74: -5926465159535170447
+    second: rig_Yoyo|010
+  - first:
+      74: -785373095563137498
+    second: rig_Yoyo|011
+  - first:
+      74: 2827415694097948324
+    second: rig_Yoyo|012
+  - first:
+      74: 2378124837707772774
+    second: rig_Yoyo|013
+  - first:
+      74: -4119634492349076373
+    second: rig_Yoyo|014
+  - first:
+      74: 5126763356516175142
+    second: rig_Yoyo|015
+  - first:
+      74: 2982038467727045607
+    second: rig_Yoyo|016
+  - first:
+      74: -1886975513259082524
+    second: rig_Yoyo|017
+  - first:
+      74: -6270602334454797586
+    second: rig_Yoyo|018
+  - first:
+      74: 7037601480528392406
+    second: rig_Yoyo|019
+  - first:
+      74: -2595196434974622339
+    second: rig_Yoyo|020
+  - first:
+      74: 8316770652154671000
+    second: rig_Yoyo|021
+  - first:
+      74: -2875760982045451243
+    second: rig_Yoyo|022
+  - first:
+      74: 6904983448895355535
+    second: rig_Yoyo|023
+  - first:
+      74: -158108130047473082
+    second: rig_Yoyo|024
+  - first:
+      74: 6280606394573014692
+    second: rig_Yoyo|025
+  - first:
+      74: -8264890112257020945
+    second: rig_Yoyo|026
+  - first:
+      74: -7809950508760602054
+    second: rig_Yoyo|027
+  - first:
+      74: 6384375986176874914
+    second: rig_Yoyo|028
+  - first:
+      74: -6657579766050679118
+    second: rig_Yoyo|029
+  - first:
+      74: 9001749268256637743
+    second: rig_Yoyo|030
+  - first:
+      74: 828669353078577461
+    second: rig_Yoyo|031
+  - first:
+      74: 4503902785645826416
+    second: rig_Yoyo|032
+  - first:
+      74: -3536472475571067815
+    second: rig_Yoyo|033
+  - first:
+      74: 7724153667951518396
+    second: rig_Yoyo|034
+  - first:
+      74: -175501257470720170
+    second: rig_Yoyo|035
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
