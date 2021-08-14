@@ -609,8 +609,8 @@ AnimatorStateTransition:
     m_ConditionEvent: Turn
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: LSMag
-    m_EventTreshold: 50
+    m_ConditionEvent: Velocity
+    m_EventTreshold: 3
   - m_ConditionMode: 2
     m_ConditionEvent: NotAnyState
     m_EventTreshold: 0

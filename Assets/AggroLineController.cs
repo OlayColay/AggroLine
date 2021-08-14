@@ -31,7 +31,7 @@ public class AggroLineController : MonoBehaviour
     [Tooltip("Acceleration of player to maxGroundSpeed")]
     public float accelerationMultiplier = 1f;
     [Tooltip("Maximum speed on foot without boosting")]
-    public float maxGroundSpeed = 10f;
+    public float maxGroundSpeed = 8f;
     [Tooltip("Turn speed (cornering) while on foot")]
     public float groundTurnSpeed = 3f;
     [Header("Jumping Options")]
@@ -56,11 +56,13 @@ public class AggroLineController : MonoBehaviour
     public float grindDrag = 0.1f;
     [Tooltip("Gravity multiplier while grinding")]
     public float grindGravityMult = 0.1f;
+    [Tooltip("Maximum speed while grinding without boosting")]
+    public float maxGrindSpeed = 11f;
     [Tooltip("Whether the player can grind")]
     public bool canGrind = true;
     [Header("BoostingOptions")]
     [Tooltip("Speed while boosting. Also used for the absolute maximum horizontal player speed.")]
-    public float boostSpeed = 15f;
+    public float boostSpeed = 13f;
 
     private Rigidbody rb;
     private Vector2 move;
@@ -112,7 +114,7 @@ public class AggroLineController : MonoBehaviour
 
     void FixedUpdate()
     {
-        // The player is grounded if a circlecast to the groundcheck position hits anything designated as grindable
+        // The player is grinding if a circlecast to the groundcheck position hits anything designated as grindable
         // This can be done using layers instead but Sample Assets will not overwrite your project settings.
         Collider[] colliders = Physics.OverlapSphere(groundCheck.position, grindCheckRadius, whatIsGrindable);
         for (int i = 0; i < colliders.Length; i++)
@@ -127,10 +129,7 @@ public class AggroLineController : MonoBehaviour
                     endOfPathInstruction = curRail.GetComponent<GrindRail>().endOfPathInstruction;
                     currentSpeed += grindStartBonus;
                     
-                    float angle = Mathf.Abs(transform.eulerAngles.y - curRail.path.GetRotationAtDistance(grindDist, endOfPathInstruction).y * 180);
-                    // Debug.Log(angle);
-                    while (angle > 360f)
-                        angle -= 360f;
+                    float angle = Vector3.Angle(transform.forward, curRail.path.GetDirectionAtDistance(grindDist, endOfPathInstruction));
                     grindingBackwards = (90f < angle);
                 }
                 isGrinding = true;
@@ -180,9 +179,9 @@ public class AggroLineController : MonoBehaviour
 
         localVelocity = rb.transform.InverseTransformDirection(rb.velocity);
         localVelocity.x = 0f; // Remove sideways speed
-        localVelocity.z = Mathf.Min(localVelocity.z, boostSpeed);
+        localVelocity.z = Mathf.Min(isGrinding ? currentSpeed : localVelocity.z, boostSpeed);
         rb.velocity = rb.transform.TransformDirection(localVelocity);
-        animator.SetFloat("Velocity", localVelocity.z);
+        animator.SetFloat("Velocity", currentSpeed);
     }
 
     void Move()
@@ -192,7 +191,7 @@ public class AggroLineController : MonoBehaviour
         isChangingDirection = move != lastMove;
         lastMove = move;
 
-        if (!canMove || animator.GetBool("Turn") || isGrinding)
+        if (!canMove || isGrinding)
         {
             return;
         }
@@ -211,25 +210,38 @@ public class AggroLineController : MonoBehaviour
  
         isMovingForward = false;
         // Debug.Log(Vector3.Angle(VelocityAmount, new Vector3(transform.forward.x, 0f, transform.forward.z)));
-        if (move.magnitude > float.Epsilon && 120f < Vector3.Angle(moveFlattened, new Vector3(transform.forward.x, 0f, transform.forward.z)))
+        if (move.magnitude > float.Epsilon && 150f < Vector3.Angle(moveFlattened, new Vector3(transform.forward.x, 0f, transform.forward.z)))
         {
-            if (isGrounded)
+            if (isGrounded && !animator.GetBool("Turn"))
             {
                 animator.SetBool("Turn", true);
             }
             else
             {
                 currentSpeed = Mathf.SmoothDamp(currentSpeed, 0f, ref curAccel, smoothMovementTime * 10);
-                rb.velocity = new Vector3(transform.forward.x * currentSpeed, rb.velocity.y, transform.forward.z * currentSpeed);
             }
             return;
         }
         isMovingForward = true;
-        // Set rotation to movement direction.
-        if (move != Vector2.zero) 
+
+        if (move.magnitude < float.Epsilon)
         {
-            // Debug.Log("Turn " + transform.rotation + " to " + Quaternion.LookRotation(VelocityAmount));
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveFlattened), isGrounded ? groundTurnSpeed : airTurnSpeed);
+            return;
+        }
+
+        // Set rotation to movement direction.
+        // Debug.Log("Turn " + transform.rotation + " to " + Quaternion.LookRotation(VelocityAmount));
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveFlattened), isGrounded ? (animator.GetBool("Turn") ? 10f : groundTurnSpeed) : airTurnSpeed);
+
+        if (animator.GetBool("Turn"))
+        {
+            rb.velocity = transform.forward * currentSpeed;
+            animator.SetBool("Turn", false);
+        }
+
+        if(!isGrounded)
+        {
+            return;
         }
  
         // Update current speed.
@@ -253,13 +265,13 @@ public class AggroLineController : MonoBehaviour
 
             if (currentSpeed > 0f)
             {
-                currentSpeed -= grindDrag;
+                currentSpeed = Mathf.Min(currentSpeed, maxGrindSpeed) - grindDrag;
             }
 
             if (endOfPathInstruction == EndOfPathInstruction.Stop && ((!grindingBackwards && t >= 1f) || (grindingBackwards && t <= 0f)))
             {
-                isGrinding = false;
                 transform.SetParent(null);
+                isGrinding = false;
                 canGrind = false;
                 StartCoroutine(Dismount());
             }
@@ -299,11 +311,10 @@ public class AggroLineController : MonoBehaviour
         // If jumping from riding, preserve momentum and reset parent
         if (isGrinding)
         {
-            // rb.velocity = new Vector2(currentSpeed * transform.parent.right.x, rb.velocity.y);
             // curJumpForce += currentSpeed * Mathf.Max(transform.parent.right.y, 0f);
             transform.eulerAngles = new Vector3(0f, transform.eulerAngles.y, 0f);
-            isGrinding = false;
             transform.SetParent(null);
+            isGrinding = false;
             canGrind = false;
             StartCoroutine(Dismount());
         }
@@ -329,7 +340,7 @@ public class AggroLineController : MonoBehaviour
             transform.Rotate(transform.up, 360f * deltaTime);
             if (isMovingForward && move.magnitude > float.Epsilon)
             {
-                // Debug.Log("Cancel Turn");
+                Debug.Log("Cancel Turn");
                 break;
             }
             yield return null;
