@@ -84,6 +84,7 @@ public class AggroLineController : MonoBehaviour
     private bool isJumping = false;
     private bool isTrickJumping = false;
     private bool isGrinding = false;
+    private bool isMovingBackward = false;
     private bool isMovingForward = false;
     private bool isChangingDirection = false;
     private bool canJumpMore = false;
@@ -186,7 +187,7 @@ public class AggroLineController : MonoBehaviour
 
     void Move()
     { 
-        animator.SetFloat("LSMag", move.magnitude * 100);
+        animator.SetFloat("LSMag", move.magnitude);
 
         isChangingDirection = move != lastMove;
         lastMove = move;
@@ -195,7 +196,7 @@ public class AggroLineController : MonoBehaviour
         {
             return;
         }
-        StopCoroutine(Turn180());
+        // StopCoroutine(Turn180());
 
         // Set movement speed, and its maximum and minimum values.
         moveFlattened = new Vector3(move.x, 0f, move.y);
@@ -207,10 +208,16 @@ public class AggroLineController : MonoBehaviour
  
         // Make movement relative to camera.
         moveFlattened = camRotationFlattened * moveFlattened;
+
+        if (move.magnitude < float.Epsilon)
+        {
+            isMovingBackward = isMovingForward = false;
+            return;
+        }
  
-        isMovingForward = false;
+        isMovingBackward = 150f < Vector3.Angle(moveFlattened, new Vector3(transform.forward.x, 0f, transform.forward.z));
         // Debug.Log(Vector3.Angle(VelocityAmount, new Vector3(transform.forward.x, 0f, transform.forward.z)));
-        if (move.magnitude > float.Epsilon && 150f < Vector3.Angle(moveFlattened, new Vector3(transform.forward.x, 0f, transform.forward.z)))
+        if (isMovingBackward)
         {
             if (isGrounded && !animator.GetBool("Turn"))
             {
@@ -222,22 +229,20 @@ public class AggroLineController : MonoBehaviour
             }
             return;
         }
-        isMovingForward = true;
 
-        if (move.magnitude < float.Epsilon)
-        {
-            return;
-        }
+        
+        isMovingForward = Vector3.Angle(moveFlattened, new Vector3(transform.forward.x, 0f, transform.forward.z)) < 20f;
 
-        // Set rotation to movement direction.
-        // Debug.Log("Turn " + transform.rotation + " to " + Quaternion.LookRotation(VelocityAmount));
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveFlattened), isGrounded ? (animator.GetBool("Turn") ? 10f : groundTurnSpeed) : airTurnSpeed);
-
-        if (animator.GetBool("Turn"))
+        if (isMovingForward && animator.GetBool("Turn"))
         {
             rb.velocity = transform.forward * currentSpeed;
             animator.SetBool("Turn", false);
+            return;
         }
+        
+        // Set rotation to movement direction.
+        // Debug.Log("Turn " + transform.rotation + " to " + Quaternion.LookRotation(VelocityAmount));
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moveFlattened), isGrounded ? groundTurnSpeed : airTurnSpeed);
 
         if(!isGrounded)
         {
@@ -246,8 +251,8 @@ public class AggroLineController : MonoBehaviour
  
         // Update current speed.
         currentSpeed = maxGroundSpeed * move.magnitude;
-        if (Mathf.Abs(rb.velocity.x) + Mathf.Abs(rb.velocity.z) < move.magnitude * maxGroundSpeed)
-            rb.AddForce(transform.forward.x * currentSpeed * accelerationMultiplier, 0f, transform.forward.z * currentSpeed* accelerationMultiplier);
+        if (Mathf.Abs(rb.velocity.x) + Mathf.Abs(rb.velocity.z) < currentSpeed)
+            rb.velocity = new Vector3(transform.forward.x * currentSpeed, 0f, transform.forward.z * currentSpeed);
     }
 
     void Grind()
@@ -338,7 +343,7 @@ public class AggroLineController : MonoBehaviour
         for (float i = 0f; i < 0.5f; i += deltaTime)
         {
             transform.Rotate(transform.up, 360f * deltaTime);
-            if (isMovingForward && move.magnitude > float.Epsilon)
+            if (isMovingForward)
             {
                 Debug.Log("Cancel Turn");
                 break;
@@ -352,6 +357,7 @@ public class AggroLineController : MonoBehaviour
         }
         // Reset animator's rotation in case a turn animation would modify it
         animator.transform.localRotation = Quaternion.identity;
+        animator.SetBool("Turn", false);
     }
 
     void OnDisable()
