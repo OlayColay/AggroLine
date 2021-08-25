@@ -34,19 +34,31 @@ public class AggroLineController : MonoBehaviour
     public float maxGroundSpeed = 8f;
     [Tooltip("Turn speed (cornering) while on foot")]
     public float groundTurnSpeed = 3f;
+    [Header("Falling Options")]
+    [Tooltip("Turn speed (cornering) while airborne")]
+    public float airTurnSpeed = 1f;
+    [Tooltip("Maximum vertical falling speed. Should be posative")]
+    public float terminalVelocity = 7f;
     [Header("Jumping Options")]
     [Tooltip("Starting upwards velocity of a jump")]
     public float jumpForce = 10f;
-    [Tooltip("Starting upwards velocity of a trick jump")]
-    public float trickJumpForce = 11f;
     [Tooltip("Subtract from jumpForce every FixedUpdate")]
     public float jumpDamper = 0.1f;
     [Tooltip("How long, in seconds, player travels upwards when holding down the jump button")]
     public float maxJumpTime = 1f;
     [Tooltip("Minimum length of an upwards jump")]
     public float minJumpTime = 0.1f;
-    [Tooltip("Turn speed (cornering) while airborne")]
-    public float airTurnSpeed = 1f;
+    [Header("Trick Jumping Options")]
+    [Tooltip("Starting upwards velocity of a trick jump")]
+    public float trickJumpForce = 11f;
+    [Tooltip("How long, in seconds, player travels upwards when holding down the jump button for trick jumps")]
+    public float maxTrickJumpTime = 1f;
+    [Tooltip("Speed at which player trick jumps from")]
+    public float trickJumpSpeed = 9f;
+    [Tooltip("Speed reduction at the start of a trick jump")]
+    public float trickJumpLoss = 1f;
+    [Tooltip("Gravity multiplier while airborne from a trick jump")]
+    public float trickJumpGravityMult = 0.75f;
     [Header("Grinding Options")]
     [Tooltip("How far to check for grinds from groundCheck's position")]
     public float grindCheckRadius = 0.5f;
@@ -58,6 +70,8 @@ public class AggroLineController : MonoBehaviour
     public float grindGravityMult = 0.1f;
     [Tooltip("Maximum speed while grinding without boosting")]
     public float maxGrindSpeed = 11f;
+    [Tooltip("Minimum speed while grinding")]
+    public float minGrindSpeed = 2f;
     [Tooltip("Whether the player can grind")]
     public bool canGrind = true;
     [Header("BoostingOptions")]
@@ -134,7 +148,6 @@ public class AggroLineController : MonoBehaviour
                     grindingBackwards = (90f < angle);
                 }
                 isGrinding = true;
-                rb.AddForce(Physics.gravity * rb.mass * grindGravityMult);
                 break;
             }
             if (i == colliders.Length - 1)
@@ -142,7 +155,7 @@ public class AggroLineController : MonoBehaviour
         }
         transform.SetParent(isGrinding ? curRail.transform : null);
         animator.SetBool("Grind", isGrinding);
-        rb.useGravity = !isGrinding;
+        rb.useGravity = !(isGrinding || isTrickJumping);
 
         colliders = Physics.OverlapSphere(groundCheck.position, groundCheckRadius, whatIsGround);
         for (int i = 0; i < colliders.Length; i++)
@@ -151,10 +164,17 @@ public class AggroLineController : MonoBehaviour
             {
                 // Debug.Log("Ground found: " + colliders[i].name);
                 isGrounded = true;
+                isTrickJumping = false;
                 break;
             }
             if (i == colliders.Length - 1)
+            {
                 isGrounded = false;
+                if (isTrickJumping)
+                {
+                    rb.AddForce(Physics.gravity * Mathf.Pow(rb.mass, 2) * trickJumpGravityMult);
+                }
+            }
         }
         animator.SetBool("Ground", isGrounded);
 
@@ -166,7 +186,7 @@ public class AggroLineController : MonoBehaviour
         // If the player continues jumping...
         if (canJumpMore && (isJumping || jumpTimeCounter < minJumpTime)) 
         {
-            if (jumpTimeCounter < maxJumpTime)
+            if (jumpTimeCounter < (isTrickJumping ? maxTrickJumpTime : maxJumpTime))
             {
                 rb.AddForce(0f, curJumpForce, 0f, ForceMode.Impulse);
                 jumpTimeCounter += Time.deltaTime;
@@ -179,8 +199,9 @@ public class AggroLineController : MonoBehaviour
             canJumpMore = isJumping = false;
 
         localVelocity = rb.transform.InverseTransformDirection(rb.velocity);
-        localVelocity.x = 0f; // Remove sideways speed
-        localVelocity.z = Mathf.Min(isGrinding ? currentSpeed : localVelocity.z, boostSpeed);
+        localVelocity.x = 0f;                                               // Remove sideways speed
+        localVelocity.y = Mathf.Max(localVelocity.y, -terminalVelocity);    // Limit falling speed
+        localVelocity.z = Mathf.Min(currentSpeed, boostSpeed);              // Limit forward speed
         rb.velocity = rb.transform.TransformDirection(localVelocity);
         animator.SetFloat("Velocity", currentSpeed);
     }
@@ -212,6 +233,7 @@ public class AggroLineController : MonoBehaviour
         if (move.magnitude < float.Epsilon)
         {
             isMovingBackward = isMovingForward = false;
+            currentSpeed = (currentSpeed < 0f) ? 0f : currentSpeed - rb.drag*Time.fixedDeltaTime;
             return;
         }
  
@@ -251,8 +273,10 @@ public class AggroLineController : MonoBehaviour
  
         // Update current speed.
         currentSpeed = maxGroundSpeed * move.magnitude;
-        if (Mathf.Abs(rb.velocity.x) + Mathf.Abs(rb.velocity.z) < currentSpeed)
-            rb.velocity = new Vector3(transform.forward.x * currentSpeed, 0f, transform.forward.z * currentSpeed);
+        // if (Mathf.Abs(rb.velocity.x) + Mathf.Abs(rb.velocity.z) < currentSpeed + 1)
+        //     rb.velocity = new Vector3(transform.forward.x * currentSpeed, 0f, transform.forward.z * currentSpeed);
+        // else
+        //     Debug.Log("Too fast: " + (Mathf.Abs(rb.velocity.x) + Mathf.Abs(rb.velocity.z)));
     }
 
     void Grind()
@@ -268,9 +292,9 @@ public class AggroLineController : MonoBehaviour
                 transform.RotateAround(transform.position, curRail.path.GetNormalAtDistance(grindDist, endOfPathInstruction), 180);
             }
 
-            if (currentSpeed > 0f)
+            if (minGrindSpeed < currentSpeed)
             {
-                currentSpeed = Mathf.Min(currentSpeed, maxGrindSpeed) - grindDrag;
+                currentSpeed = Mathf.Min(currentSpeed - grindDrag - transform.forward.y * grindGravityMult, maxGrindSpeed);
             }
 
             if (endOfPathInstruction == EndOfPathInstruction.Stop && ((!grindingBackwards && t >= 1f) || (grindingBackwards && t <= 0f)))
@@ -306,6 +330,7 @@ public class AggroLineController : MonoBehaviour
     }
     private void JumpHelper()
     {
+        isTrickJumping = (trickJumpSpeed <= currentSpeed);
         isJumping = canJumpMore = true;
         isGrounded = false;
         // Add a vertical force to the player.
@@ -322,6 +347,12 @@ public class AggroLineController : MonoBehaviour
             isGrinding = false;
             canGrind = false;
             StartCoroutine(Dismount());
+        }
+
+        if (isTrickJumping)
+        {
+            currentSpeed -= trickJumpLoss;
+            
         }
     }
     public IEnumerator<WaitForSeconds> Dismount()

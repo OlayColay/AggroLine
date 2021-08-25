@@ -22,7 +22,7 @@ public class Turn : StateMachineBehaviour
   
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
         {
-            animator.GetComponent<AggroLineController>().currentSpeed = 0f;
+            animator.transform.parent.GetComponent<AggroLineController>().currentSpeed = 0f;
         }
     }
 
